@@ -16,74 +16,85 @@
     <meta name="theme-color" content="#ffffff">
   </head>
   <body class="container mt-3">
-    <a href="/" class="btn btn-secondary btn-sm">Back</a>
-    <a href="/stream" class="btn btn-secondary btn-sm"><i class="bi-arrow-repeat"></i></a>
+  <a href="/" class="btn btn-secondary btn-sm">Back</a>
+  <a href="/stream" class="btn btn-secondary btn-sm"><i class="bi-arrow-repeat"></i></a>
 
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th scope="col">
-            <span id="front"></span>
-            <span id="back"></span>
-            <span id="left"></span>
-            <span id="right"></span>
-          </th>
-        </tr>
-      </thead>
+  <div class="row">
+    <div class="col-md-3">
+      <h2>Front</h2>
+      <video id="front" width="100%" controls autoplay muted>
+        <source type="video/mp4">
+      </video>
+    </div>
+    <div class="col-md-3">
+      <h2>Back</h2>
+      <video id="back" width="100%" controls autoplay muted>
+        <source type="video/mp4">
+      </video>
+    </div>
+    <div class="col-md-3">
+      <h2>Left</h2>
+      <video id="left" width="100%" controls autoplay muted>
+        <source type="video/mp4">
+      </video>
+    </div>
+    <div class="col-md-3">
+      <h2>Right</h2>
+      <video id="right" width="100%" controls autoplay muted>
+        <source type="video/mp4">
+      </video>
+    </div>
+  </div>
+  
+  <script>
+    const media = {
+      front: document.getElementById('front'),
+      back: document.getElementById('back'),
+      left: document.getElementById('left'),
+      right: document.getElementById('right')
+    };
+    const sources = {
+      front: document.getElementById('front').querySelector('source'),
+      back: document.getElementById('back').querySelector('source'),
+      left: document.getElementById('left').querySelector('source'),
+      right: document.getElementById('right').querySelector('source')
+    };
+    const interval = 5000;
+    const dates = {};
+    let lastPlay = [];
 
-      <tbody>
-        <tr>
-          <td>
-            <video width="100%" controls autoplay muted>
-              <source type="video/mp4">
-            </video>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <script>
-      const media = document.querySelector('video')
-      const source = document.querySelector('source')
+    function play(angle, date) {
+      lastPlay = [angle, date];
+      sources[angle].src = `/ram/${angle}.mp4?${date}`;
+      media[angle].load();
+    }
 
-      const interval = 5000
-      const dates = {}
-      let lastPlay = []
+    function playlist() {
+      fetch('/stream?json')
+      .then(res => res.json())
+      .then(out => {
+        for (const angle of ['front', 'back', 'left', 'right']) {
+          if (out.streams && out.streams[angle]) {
+            dates[angle] = out.streams[angle];
+            if (!lastPlay.length) {
+              play(angle, dates[angle]);
+            }
 
-      media.addEventListener('ended', (event) => {
-        if (dates[lastPlay[0]] > lastPlay[1]) {
-          play(lastPlay[0], dates[lastPlay[0]])
+            const caret = angle === 'front' ? 'up' : angle === 'back' ? 'down' : angle;
+            const label = angle.charAt(0).toUpperCase() + angle.slice(1);
+            document.getElementById(angle).innerHTML = `
+              <h2>${label}</h2>
+              <a href="#" onclick="play('${angle}', '${dates[angle]}')"><i class="bi-caret-${caret}-fill"></i></a> 
+              <a href="#" onclick="play('${angle}', '${dates[angle]}')">Play</a>
+            `;
+          }
         }
       })
+      .catch(err => console.log(err));
+    }
 
-      function play(angle, date) {
-        lastPlay = [angle, date]
-        source.src = `/ram/${angle}.mp4?${date}`
-        media.load()
-      }
-
-      function playlist() {
-        fetch('/stream?json')
-        .then(res => res.json())
-        .then(out => {
-           const angles = ['front', 'back', 'left', 'right'];
-            angles.forEach(angle => {
-                if (out.streams && out.streams[angle]) {
-                    dates[angle] = out.streams[angle];
-                    if (!lastPlay.length) {
-                        play(angle, dates[angle]);
-                    }
-
-                    const caret = angle === 'front' ? 'up' : angle === 'back' ? 'down' : angle;
-                    const label = angle.charAt(0).toUpperCase() + angle.slice(1);
-                    document.getElementById(angle).innerHTML = `<a href="#" onclick="play('${angle}', '${dates[angle]}')"><i class="bi-caret-${caret}-fill"></i></a> <a href="#" onclick="play('${angle}', '${dates[angle]}')">${label}</a>`;
-            }
-          }
-        })
-        .catch(err => console.log(err))
-      }
-
-      playlist()
-      setInterval(playlist, interval)
-    </script>
-  </body>
+    playlist();
+    setInterval(playlist, interval);
+  </script>
+</body>
 </html>
