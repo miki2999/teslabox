@@ -65,16 +65,17 @@
         fetch('/stream?json')
         .then(res => res.json())
         .then(out => {
-          for (const angle of ['front', 'back', 'left', 'right']) {
-            if (out.streams && out.streams[angle]) {
-              dates[angle] = out.streams[angle]
-              if (!lastPlay.length) {
-                play(angle, dates[angle])
-              }
+           const angles = ['front', 'back', 'left', 'right'];
+            angles.forEach(angle => {
+                if (out.streams && out.streams[angle]) {
+                    dates[angle] = out.streams[angle];
+                    if (!lastPlay.length) {
+                        play(angle, dates[angle]);
+                    }
 
-              const caret = angle === 'front' ? 'up' : angle === 'back' ? 'down' : angle
-              const label = angle.charAt(0).toUpperCase() + angle.slice(1)
-              document.getElementById(angle).innerHTML = `<a href="#" onclick="play('${angle}', '${dates[angle]}')"><i class="bi-caret-${caret}-fill"></i></a> <a href="#" onclick="play('${angle}', '${dates[angle]}')">${label}</a>`
+                    const caret = angle === 'front' ? 'up' : angle === 'back' ? 'down' : angle;
+                    const label = angle.charAt(0).toUpperCase() + angle.slice(1);
+                    document.getElementById(angle).innerHTML = `<a href="#" onclick="play('${angle}', '${dates[angle]}')"><i class="bi-caret-${caret}-fill"></i></a> <a href="#" onclick="play('${angle}', '${dates[angle]}')">${label}</a>`;
             }
           }
         })
